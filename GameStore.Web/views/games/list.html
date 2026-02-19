@@ -1,0 +1,104 @@
+<!-- views/games/list.html -->
+<div class="gs-page-header d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="mb-0"><i class="bi bi-joystick me-2 text-success"></i>Games</h2>
+    <p class="text-muted mb-0">Browse and manage your game catalogue</p>
+  </div>
+  <a href="#!/games/new" class="btn btn-success">
+    <i class="bi bi-plus-circle me-1"></i>Add Game
+  </a>
+</div>
+
+<!-- Success alert -->
+<div ng-if="vm.successMsg" class="alert alert-success alert-dismissible fade show" role="alert">
+  <i class="bi bi-check-circle me-2"></i>{{ vm.successMsg }}
+  <button type="button" class="btn-close" ng-click="vm.successMsg = null"></button>
+</div>
+
+<!-- Error alert -->
+<div ng-if="vm.errorMsg" class="alert alert-danger alert-dismissible fade show" role="alert">
+  <i class="bi bi-exclamation-triangle me-2"></i>{{ vm.errorMsg }}
+  <button type="button" class="btn-close" ng-click="vm.errorMsg = null"></button>
+</div>
+
+<!-- Loading spinner -->
+<div ng-if="vm.isLoading" class="text-center py-5">
+  <div class="spinner-border text-success" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <p class="mt-2 text-muted">Loading games…</p>
+</div>
+
+<!-- Empty state -->
+<div ng-if="!vm.isLoading && vm.games.length === 0 && !vm.errorMsg" class="text-center py-5">
+  <i class="bi bi-inbox fs-1 text-muted"></i>
+  <p class="mt-2 text-muted">No games found. Add your first game!</p>
+  <a href="#!/games/new" class="btn btn-success mt-2">
+    <i class="bi bi-plus-circle me-1"></i>Add Game
+  </a>
+</div>
+
+<!-- Games table -->
+<div ng-if="!vm.isLoading && vm.games.length > 0" class="card shadow-sm border-0">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Genre</th>
+            <th>Price</th>
+            <th>Release Date</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="game in vm.games track by game.id">
+            <td class="text-muted small">{{ game.id }}</td>
+            <td class="fw-semibold">{{ game.name }}</td>
+            <td>
+              <span class="badge bg-secondary">{{ game.genre }}</span>
+            </td>
+            <td class="text-success fw-semibold">${{ game.price | number:2 }}</td>
+            <td>{{ game.releaseDate }}</td>
+            <td class="text-center">
+              <div class="btn-group btn-group-sm" role="group">
+                <a
+                  href="#!/games/{{ game.id }}"
+                  class="btn btn-outline-info"
+                  title="View Details"
+                >
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a
+                  href="#!/games/{{ game.id }}/edit"
+                  class="btn btn-outline-primary"
+                  title="Edit"
+                >
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <button
+                  class="btn btn-outline-danger"
+                  title="Delete"
+                  ng-click="vm.deleteGame(game.id, game.name)"
+                  ng-disabled="vm.deletingId === game.id"
+                >
+                  <span
+                    ng-if="vm.deletingId === game.id"
+                    class="spinner-border spinner-border-sm"
+                    role="status"
+                  ></span>
+                  <i ng-if="vm.deletingId !== game.id" class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-footer text-muted small">
+    {{ vm.games.length }} game{{ vm.games.length !== 1 ? 's' : '' }} total
+  </div>
+</div>

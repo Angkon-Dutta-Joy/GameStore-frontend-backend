@@ -1,0 +1,48 @@
+<!-- views/genres/list.html -->
+<div class="gs-page-header d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="mb-0"><i class="bi bi-tags me-2 text-secondary"></i>Genres</h2>
+    <p class="text-muted mb-0">All available game genres</p>
+  </div>
+</div>
+
+<!-- Loading -->
+<div ng-if="vm.isLoading" class="text-center py-5">
+  <div class="spinner-border text-secondary" role="status"></div>
+  <p class="mt-2 text-muted">Loading genres…</p>
+</div>
+
+<!-- Error -->
+<div ng-if="vm.errorMsg" class="alert alert-danger">
+  <i class="bi bi-exclamation-triangle me-2"></i>{{ vm.errorMsg }}
+</div>
+
+<!-- Empty state -->
+<div ng-if="!vm.isLoading && vm.genres.length === 0 && !vm.errorMsg" class="text-center py-5">
+  <i class="bi bi-tags fs-1 text-muted"></i>
+  <p class="mt-2 text-muted">No genres found.</p>
+</div>
+
+<!-- Genres grid -->
+<div ng-if="!vm.isLoading && vm.genres.length > 0" class="row g-3">
+  <div
+    class="col-sm-6 col-md-4 col-lg-3"
+    ng-repeat="genre in vm.genres track by genre.id"
+  >
+    <div class="card h-100 shadow-sm border-0 genre-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="genre-icon bg-secondary bg-opacity-10 text-secondary rounded-circle d-flex align-items-center justify-content-center">
+          <i class="bi bi-tag-fill fs-5"></i>
+        </div>
+        <div>
+          <p class="mb-0 fw-semibold">{{ genre.name }}</p>
+          <small class="text-muted">ID: {{ genre.id }}</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div ng-if="!vm.isLoading && vm.genres.length > 0" class="mt-3 text-muted small">
+  {{ vm.genres.length }} genre{{ vm.genres.length !== 1 ? 's' : '' }} available
+</div>

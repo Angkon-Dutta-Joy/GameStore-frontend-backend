@@ -1,0 +1,41 @@
+GET  http://localhost:5055/games
+
+###
+GET  http://localhost:5055/games/2
+
+###
+
+POST http://localhost:5055/games
+Content-Type: application/json
+                                      
+{
+    "name": "Test Game",
+    "genreId": 1,
+    "price": 9.99,
+    "releaseDate": "1991-02-01"
+}
+
+//must give a 1 line break between content type and body
+
+
+###
+Put http://localhost:5055/games/2
+Content-Type: application/json
+
+{
+    "name": "Street Fighter II Turbo",
+    "genreId": 1,
+    "price": 19.99,
+    "releaseDate": "1991-02-01"
+}
+
+
+###
+
+DELETE http://localhost:5055/games/4
+
+
+
+###
+
+Get http://localhost:5055/genres

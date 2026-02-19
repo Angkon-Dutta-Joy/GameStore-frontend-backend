@@ -1,0 +1,129 @@
+/* =========================================================
+   site.css — GameStore SPA Styles
+   ========================================================= */
+
+/* ── Root / Global ───────────────────────────────────────── */
+:root {
+  --gs-primary:   #198754;   /* Bootstrap success green */
+  --gs-dark:      #212529;
+  --gs-card-radius: 0.75rem;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background-color: #f4f6f9;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: #343a40;
+}
+
+/* ── Layout ─────────────────────────────────────────────── */
+main.container {
+  min-height: calc(100vh - 72px);
+  padding-top: 1.5rem;
+  padding-bottom: 3rem;
+}
+
+/* ── Page header ────────────────────────────────────────── */
+.gs-page-header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #dee2e6;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Cards ──────────────────────────────────────────────── */
+.card {
+  border-radius: var(--gs-card-radius);
+}
+
+.card-header {
+  border-radius: var(--gs-card-radius) var(--gs-card-radius) 0 0 !important;
+  padding: 1rem 1.25rem;
+}
+
+/* ── Table enhancements ─────────────────────────────────── */
+.table > thead > tr > th {
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(25, 135, 84, 0.05);
+}
+
+/* ── Navbar ─────────────────────────────────────────────── */
+.navbar-brand {
+  font-size: 1.2rem;
+  letter-spacing: 0.02em;
+}
+
+/* Active nav link indicator */
+.navbar-nav .nav-link.active,
+.navbar-nav .nav-link:focus {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+/* ── Genre cards ────────────────────────────────────────── */
+.genre-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.genre-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+.genre-icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+/* ── Forms ──────────────────────────────────────────────── */
+.form-label {
+  font-size: 0.9rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--gs-primary);
+  box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.2);
+}
+
+/* ── Buttons ────────────────────────────────────────────── */
+.btn {
+  border-radius: 0.4rem;
+  font-size: 0.9rem;
+}
+
+/* ── Badges ─────────────────────────────────────────────── */
+.badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+}
+
+/* ── Spinner override ───────────────────────────────────── */
+.spinner-border {
+  width: 2rem;
+  height: 2rem;
+}
+
+/* ── ng-cloak (prevents FOUC) ───────────────────────────── */
+[ng-cloak], .ng-cloak {
+  display: none !important;
+}
+
+/* ── Responsive tweaks ──────────────────────────────────── */
+@media (max-width: 576px) {
+  .gs-page-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.75rem;
+  }
+}
