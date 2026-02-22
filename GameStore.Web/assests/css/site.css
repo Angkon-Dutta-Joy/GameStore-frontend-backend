@@ -4,8 +4,8 @@
 
 /* ── Root / Global ───────────────────────────────────────── */
 :root {
-  --gs-primary:   #198754;   /* Bootstrap success green */
-  --gs-dark:      #212529;
+  --gs-primary:     #198754;
+  --gs-dark:        #212529;
   --gs-card-radius: 0.75rem;
 }
 
@@ -61,27 +61,49 @@ main.container {
   letter-spacing: 0.02em;
 }
 
-/* Active nav link indicator */
-.navbar-nav .nav-link.active,
-.navbar-nav .nav-link:focus {
-  color: #ffffff !important;
-  font-weight: 600;
+/* ── Modal enhancements ─────────────────────────────────── */
+.modal-content {
+  border-radius: 0.75rem;
+  overflow: hidden;
 }
 
-/* ── Genre cards ────────────────────────────────────────── */
+.modal-header {
+  padding: 1rem 1.25rem;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  padding: 1rem 1.25rem;
+  background-color: #f8f9fa;
+}
+
+/* Smooth modal animation */
+.modal.fade .modal-dialog {
+  transition: transform 0.2s ease-out;
+  transform: translateY(-20px);
+}
+
+.modal.show .modal-dialog {
+  transform: translateY(0);
+}
+
+/* ── Genre cards (inside modal) ─────────────────────────── */
 .genre-card {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 
 .genre-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1) !important;
+  background-color: #f0f0f0;
 }
 
 .genre-icon {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
+  font-size: 0.9rem;
 }
 
 /* ── Forms ──────────────────────────────────────────────── */
@@ -125,5 +147,9 @@ main.container {
     flex-direction: column;
     align-items: flex-start !important;
     gap: 0.75rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
   }
 }

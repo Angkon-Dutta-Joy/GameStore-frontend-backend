@@ -1,7 +1,4 @@
 'use strict';
 
-/**
- * gameStoreApp — root Angular module.
- * Dependencies: ngRoute for client-side routing.
- */
-angular.module('gameStoreApp', ['ngRoute']);
+// No ngRoute dependency needed — we're a true single-page app now
+angular.module('gameStoreApp', []);

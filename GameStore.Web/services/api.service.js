@@ -2,9 +2,7 @@
 
 /**
  * api.service.js — Centralised HTTP service.
- *
  * All backend communication is funnelled through this service.
- * Update API_BASE_URL to match your environment.
  */
 angular
   .module('gameStoreApp')
@@ -12,10 +10,6 @@ angular
 
     var API_BASE_URL = 'http://localhost:5055';
 
-    /**
-     * Private helper — perform an HTTP request and return a promise
-     * that resolves with response.data or rejects with a friendly message.
-     */
     function request(method, url, data) {
       var config = {
         method: method,
@@ -40,7 +34,6 @@ angular
             } else if (error.data.title) {
               message = error.data.title;
             } else if (error.data.errors) {
-              // ASP.NET validation problem details
               var errors = [];
               angular.forEach(error.data.errors, function (msgs) {
                 errors = errors.concat(msgs);
@@ -57,35 +50,12 @@ angular
         });
     }
 
-    // ─── Games ───────────────────────────────────────────────────────────────
-
-    function getGames() {
-      return request('GET', '/games');
-    }
-
-    function getGame(id) {
-      return request('GET', '/games/' + id);
-    }
-
-    function createGame(game) {
-      return request('POST', '/games', game);
-    }
-
-    function updateGame(id, game) {
-      return request('PUT', '/games/' + id, game);
-    }
-
-    function deleteGame(id) {
-      return request('DELETE', '/games/' + id);
-    }
-
-    // ─── Genres ──────────────────────────────────────────────────────────────
-
-    function getGenres() {
-      return request('GET', '/genres');
-    }
-
-    // ─── Public API ──────────────────────────────────────────────────────────
+    function getGames()         { return request('GET',    '/games'); }
+    function getGame(id)        { return request('GET',    '/games/' + id); }
+    function createGame(game)   { return request('POST',   '/games', game); }
+    function updateGame(id, g)  { return request('PUT',    '/games/' + id, g); }
+    function deleteGame(id)     { return request('DELETE', '/games/' + id); }
+    function getGenres()        { return request('GET',    '/genres'); }
 
     return {
       getGames:   getGames,

@@ -5,48 +5,325 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GameStore</title>
 
-  <!-- Bootstrap 5 -->
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-    crossorigin="anonymous"
-  />
-  <!-- Bootstrap Icons -->
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-  />
-  <!-- App CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="assets/css/site.css" />
 </head>
-<body>
 
-  <!-- Shared Navbar -->
-  <div ng-include="'views/shared/navbar.html'"></div>
+<!-- ONE controller on body — no ng-view, no routing complexity -->
+<body ng-controller="GamesController as vm">
 
-  <!-- Router View -->
+  <!-- ── Navbar ─────────────────────────────────────────────────────────── -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="#">
+        <i class="bi bi-controller fs-5 me-2"></i>GameStore
+      </a>
+      <div class="d-flex gap-2 ms-auto">
+        <button class="btn btn-outline-light btn-sm" ng-click="vm.openGenresModal()">
+          <i class="bi bi-tags me-1"></i>Genres
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Main content ───────────────────────────────────────────────────── -->
   <main class="container my-4">
-    <div ng-view></div>
+
+    <!-- Page header -->
+    <div class="gs-page-header d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="mb-0"><i class="bi bi-joystick me-2 text-success"></i>Games</h2>
+        <p class="text-muted mb-0">Browse and manage your game catalogue</p>
+      </div>
+      <button class="btn btn-success" ng-click="vm.openCreateModal()">
+        <i class="bi bi-plus-circle me-1"></i>Add Game
+      </button>
+    </div>
+
+    <!-- Alerts -->
+    <div ng-if="vm.successMsg" class="alert alert-success alert-dismissible fade show">
+      <i class="bi bi-check-circle me-2"></i>{{ vm.successMsg }}
+      <button type="button" class="btn-close" ng-click="vm.successMsg=null"></button>
+    </div>
+    <div ng-if="vm.errorMsg" class="alert alert-danger alert-dismissible fade show">
+      <i class="bi bi-exclamation-triangle me-2"></i>{{ vm.errorMsg }}
+      <button type="button" class="btn-close" ng-click="vm.errorMsg=null"></button>
+    </div>
+
+    <!-- Loading -->
+    <div ng-if="vm.isLoading" class="text-center py-5">
+      <div class="spinner-border text-success"></div>
+      <p class="mt-2 text-muted">Loading games…</p>
+    </div>
+
+    <!-- Empty state -->
+    <div ng-if="!vm.isLoading && vm.games.length === 0 && !vm.errorMsg" class="text-center py-5">
+      <i class="bi bi-inbox fs-1 text-muted"></i>
+      <p class="mt-2 text-muted">No games found. Add your first game!</p>
+      <button class="btn btn-success mt-2" ng-click="vm.openCreateModal()">
+        <i class="bi bi-plus-circle me-1"></i>Add Game
+      </button>
+    </div>
+
+    <!-- Games table -->
+    <div ng-if="!vm.isLoading && vm.games.length > 0" class="card shadow-sm border-0">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th>#</th><th>Name</th><th>Genre</th><th>Price</th><th>Release Date</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="game in vm.games track by game.id">
+                <td class="text-muted small">{{ game.id }}</td>
+                <td class="fw-semibold">{{ game.name }}</td>
+                <td><span class="badge bg-secondary">{{ game.genre }}</span></td>
+                <td class="text-success fw-semibold">${{ game.price | number:2 }}</td>
+                <td>{{ game.releaseDate }}</td>
+                <td class="text-center">
+                  <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-info"    title="View"   ng-click="vm.openDetailsModal(game)"><i class="bi bi-eye"></i></button>
+                    <button class="btn btn-outline-primary" title="Edit"   ng-click="vm.openEditModal(game)"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-outline-danger"  title="Delete" ng-click="vm.deleteGame(game)" ng-disabled="vm.deletingId===game.id">
+                      <span ng-if="vm.deletingId===game.id" class="spinner-border spinner-border-sm"></span>
+                      <i ng-if="vm.deletingId!==game.id" class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer text-muted small">
+        {{ vm.games.length }} game{{ vm.games.length !== 1 ? 's' : '' }} total
+      </div>
+    </div>
+
   </main>
 
-  <!-- Bootstrap 5 JS -->
-  <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmFX4UvmJ7XmBkgDeD+4h9jKHEm"
-    crossorigin="anonymous"
-  ></script>
 
-  <!-- AngularJS 1.8.x -->
+  <!-- ═══════════════ MODAL — CREATE ═══════════════ -->
+  <div class="modal fade" id="createGameModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add New Game</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div ng-if="vm.createErrorMsg" class="alert alert-danger">{{ vm.createErrorMsg }}</div>
+          <form name="createForm" novalidate>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="cName" ng-model="vm.newGame.name"
+                ng-class="{'is-invalid': createForm.$submitted && createForm.cName.$invalid}"
+                maxlength="50" required placeholder="Enter game name" />
+              <div class="invalid-feedback">Name is required (max 50 characters).</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Genre <span class="text-danger">*</span></label>
+              <select class="form-select" name="cGenre" ng-model="vm.newGame.genreId"
+                ng-class="{'is-invalid': createForm.$submitted && createForm.cGenre.$invalid}"
+                ng-options="g.id as g.name for g in vm.genres" required>
+                <option value="">— Select a genre —</option>
+              </select>
+              <div class="invalid-feedback">Please select a genre.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Price ($) <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input type="number" class="form-control" name="cPrice" ng-model="vm.newGame.price"
+                  ng-class="{'is-invalid': createForm.$submitted && createForm.cPrice.$invalid}"
+                  min="1" max="100" step="0.01" required placeholder="0.00" />
+                <div class="invalid-feedback">Price must be between $1 and $100.</div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Release Date <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" name="cDate" ng-model="vm.newGame.releaseDate"
+                ng-class="{'is-invalid': createForm.$submitted && createForm.cDate.$invalid}"
+                required />
+              <div class="invalid-feedback">Release date is required.</div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-success" ng-disabled="vm.isSaving"
+                ng-click="vm.submitCreate(createForm)">
+                <span ng-if="vm.isSaving" class="spinner-border spinner-border-sm me-1"></span>
+                <i ng-if="!vm.isSaving" class="bi bi-check-circle me-1"></i>
+                {{ vm.isSaving ? 'Saving…' : 'Create Game' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════ MODAL — DETAILS ═══════════════ -->
+  <div class="modal fade" id="detailsGameModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title"><i class="bi bi-controller me-2"></i>Game Details</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div ng-if="!vm.selectedGame && !vm.detailsErrorMsg" class="text-center py-4">
+            <div class="spinner-border text-dark"></div>
+            <p class="mt-2 text-muted">Loading details…</p>
+          </div>
+          <div ng-if="vm.detailsErrorMsg" class="alert alert-danger">{{ vm.detailsErrorMsg }}</div>
+          <dl class="row mb-0" ng-if="vm.selectedGame">
+            <dt class="col-sm-4 text-muted">ID</dt>
+            <dd class="col-sm-8">{{ vm.selectedGame.id }}</dd>
+            <dt class="col-sm-4 text-muted">Name</dt>
+            <dd class="col-sm-8 fw-semibold">{{ vm.selectedGame.name }}</dd>
+            <dt class="col-sm-4 text-muted">Genre ID</dt>
+            <dd class="col-sm-8"><span class="badge bg-secondary">{{ vm.selectedGame.genreId }}</span></dd>
+            <dt class="col-sm-4 text-muted">Price</dt>
+            <dd class="col-sm-8 text-success fw-bold fs-5">${{ vm.selectedGame.price | number:2 }}</dd>
+            <dt class="col-sm-4 text-muted">Release Date</dt>
+            <dd class="col-sm-8">{{ vm.selectedGame.releaseDate }}</dd>
+          </dl>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" ng-if="vm.selectedGame" ng-click="vm.editFromDetails()">
+            <i class="bi bi-pencil me-1"></i>Edit This Game
+          </button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════ MODAL — EDIT ═══════════════ -->
+  <div class="modal fade" id="editGameModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Edit Game</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div ng-if="vm.editErrorMsg" class="alert alert-danger">{{ vm.editErrorMsg }}</div>
+          <div ng-if="!vm.editGame.name" class="text-center py-4">
+            <div class="spinner-border text-primary"></div>
+            <p class="mt-2 text-muted">Loading game…</p>
+          </div>
+          <form name="editForm" novalidate ng-if="vm.editGame.name">
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="eName" ng-model="vm.editGame.name"
+                ng-class="{'is-invalid': editForm.$submitted && editForm.eName.$invalid}"
+                maxlength="50" required placeholder="Enter game name" />
+              <div class="invalid-feedback">Name is required (max 50 characters).</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Genre <span class="text-danger">*</span></label>
+              <select class="form-select" name="eGenre" ng-model="vm.editGame.genreId"
+                ng-class="{'is-invalid': editForm.$submitted && editForm.eGenre.$invalid}"
+                ng-options="g.id as g.name for g in vm.genres" required>
+                <option value="">— Select a genre —</option>
+              </select>
+              <div class="invalid-feedback">Please select a genre.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Price ($) <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input type="number" class="form-control" name="ePrice" ng-model="vm.editGame.price"
+                  ng-class="{'is-invalid': editForm.$submitted && editForm.ePrice.$invalid}"
+                  min="1" max="100" step="0.01" required placeholder="0.00" />
+                <div class="invalid-feedback">Price must be between $1 and $100.</div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Release Date <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" name="eDate" ng-model="vm.editGame.releaseDate"
+                ng-class="{'is-invalid': editForm.$submitted && editForm.eDate.$invalid}"
+                required />
+              <div class="invalid-feedback">Release date is required.</div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" ng-disabled="vm.isSaving"
+                ng-click="vm.submitEdit(editForm)">
+                <span ng-if="vm.isSaving" class="spinner-border spinner-border-sm me-1"></span>
+                <i ng-if="!vm.isSaving" class="bi bi-save me-1"></i>
+                {{ vm.isSaving ? 'Saving…' : 'Save Changes' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════ MODAL — GENRES ═══════════════ -->
+  <div class="modal fade" id="genresModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-secondary text-white">
+          <h5 class="modal-title"><i class="bi bi-tags me-2"></i>Game Genres</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div ng-if="vm.genresError" class="alert alert-danger">{{ vm.genresError }}</div>
+          <div ng-if="!vm.genres.length && !vm.genresError" class="text-center py-4">
+            <div class="spinner-border text-secondary"></div>
+            <p class="mt-2 text-muted">Loading genres…</p>
+          </div>
+          <div class="row g-2" ng-if="vm.genres.length > 0">
+            <div class="col-6" ng-repeat="genre in vm.genres track by genre.id">
+              <div class="d-flex align-items-center gap-2 p-2 border rounded genre-card">
+                <div class="genre-icon bg-secondary bg-opacity-10 text-secondary rounded-circle d-flex align-items-center justify-content-center">
+                  <i class="bi bi-tag-fill"></i>
+                </div>
+                <div>
+                  <p class="mb-0 fw-semibold small">{{ genre.name }}</p>
+                  <small class="text-muted">ID: {{ genre.id }}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p ng-if="vm.genres.length > 0" class="text-muted small mt-3 mb-0">
+            {{ vm.genres.length }} genre{{ vm.genres.length !== 1 ? 's' : '' }} available
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular.min.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular-route.min.js"></script>
-
-  <!-- App Scripts — order matters -->
   <script src="app/app.module.js"></script>
-  <script src="app/app.routes.js"></script>
   <script src="services/api.service.js"></script>
   <script src="controllers/games.controller.js"></script>
-  <script src="controllers/genres.controller.js"></script>
 
 </body>
 </html>

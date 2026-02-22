@@ -1,280 +1,177 @@
 'use strict';
 
-/**
- * games.controller.js
- *
- * Contains all four controllers related to the Games resource:
- *   GamesListController   — /games
- *   GameDetailsController — /games/:id
- *   GameCreateController  — /games/new
- *   GameEditController    — /games/:id/edit
- */
-
-// ─── Games List ──────────────────────────────────────────────────────────────
-
 angular
   .module('gameStoreApp')
-  .controller('GamesListController', ['ApiService', '$location',
-    function (ApiService, $location) {
-      var vm = this;
+  .controller('GamesController', ['ApiService', '$timeout', function (ApiService, $timeout) {
+    var vm = this;
 
-      vm.games       = [];
-      vm.isLoading   = true;
-      vm.errorMsg    = null;
-      vm.successMsg  = null;
-      vm.deletingId  = null;
+    // ── State ─────────────────────────────────────────────────────────────────
+    vm.games           = [];
+    vm.genres          = [];
+    vm.isLoading       = true;
+    vm.errorMsg        = null;
+    vm.successMsg      = null;
+    vm.deletingId      = null;
+    vm.isSaving        = false;
+    vm.selectedGame    = null;
+    vm.createErrorMsg  = null;
+    vm.editErrorMsg    = null;
+    vm.detailsErrorMsg = null;
+    vm.genresError     = null;
 
-      // ── Load games on init ────────────────────────────────────────────────
-      function loadGames() {
-        vm.isLoading = true;
-        vm.errorMsg  = null;
+    vm.newGame  = { name: '', genreId: null, price: null, releaseDate: '' };
+    vm.editGame = { id: null, name: '', genreId: null, price: null, releaseDate: '' };
 
-        ApiService.getGames()
-          .then(function (data) {
-            vm.games = data;
-          })
-          .catch(function (err) {
-            vm.errorMsg = err;
-          })
-          .finally(function () {
-            vm.isLoading = false;
-          });
-      }
-
-      // ── Navigate to details ───────────────────────────────────────────────
-      vm.viewDetails = function (id) {
-        $location.path('/games/' + id);
-      };
-
-      // ── Navigate to edit ──────────────────────────────────────────────────
-      vm.editGame = function (id) {
-        $location.path('/games/' + id + '/edit');
-      };
-
-      // ── Delete a game ─────────────────────────────────────────────────────
-      vm.deleteGame = function (id, name) {
-        if (!window.confirm('Delete "' + name + '"? This cannot be undone.')) {
-          return;
-        }
-
-        vm.deletingId = id;
-        vm.errorMsg   = null;
-        vm.successMsg = null;
-
-        ApiService.deleteGame(id)
-          .then(function () {
-            vm.successMsg = '"' + name + '" was deleted successfully.';
-            vm.games = vm.games.filter(function (g) { return g.id !== id; });
-          })
-          .catch(function (err) {
-            vm.errorMsg = err;
-          })
-          .finally(function () {
-            vm.deletingId = null;
-          });
-      };
-
-      // ── Bootstrap ─────────────────────────────────────────────────────────
-      loadGames();
+    // ── Modal helpers ─────────────────────────────────────────────────────────
+    function showModal(id) {
+      var el = document.getElementById(id);
+      if (el) { bootstrap.Modal.getOrCreateInstance(el).show(); }
     }
-  ]);
+    function hideModal(id) {
+      var el = document.getElementById(id);
+      if (el) { bootstrap.Modal.getOrCreateInstance(el).hide(); }
+    }
 
+    // ── Date helper ───────────────────────────────────────────────────────────
+    function formatDate(raw) {
+      if (!raw) { return ''; }
+      if (raw instanceof Date) { return raw.toISOString().substring(0, 10); }
+      return String(raw).substring(0, 10);
+    }
 
-// ─── Game Details ─────────────────────────────────────────────────────────────
+    // ── Auto-dismiss success ──────────────────────────────────────────────────
+    function autoDismissSuccess() {
+      $timeout(function () { vm.successMsg = null; }, 4000);
+    }
 
-angular
-  .module('gameStoreApp')
-  .controller('GameDetailsController', ['ApiService', '$routeParams', '$location',
-    function (ApiService, $routeParams, $location) {
-      var vm = this;
-
-      vm.game      = null;
+    // ── Load games ────────────────────────────────────────────────────────────
+    function loadGames() {
       vm.isLoading = true;
       vm.errorMsg  = null;
-
-      ApiService.getGame($routeParams.id)
-        .then(function (data) {
-          vm.game = data;
-        })
-        .catch(function (err) {
-          vm.errorMsg = err;
-        })
-        .finally(function () {
-          vm.isLoading = false;
-        });
-
-      vm.goBack = function () {
-        $location.path('/games');
-      };
-
-      vm.editGame = function () {
-        $location.path('/games/' + $routeParams.id + '/edit');
-      };
+      ApiService.getGames()
+        .then(function (data) { vm.games = data; })
+        .catch(function (err) { vm.errorMsg = err; })
+        .finally(function ()  { vm.isLoading = false; });
     }
-  ]);
 
-
-// ─── Game Create ──────────────────────────────────────────────────────────────
-
-angular
-  .module('gameStoreApp')
-  .controller('GameCreateController', ['ApiService', '$location',
-    function (ApiService, $location) {
-      var vm = this;
-
-      vm.genres     = [];
-      vm.errorMsg   = null;
-      vm.isLoading  = false;
-      vm.isSaving   = false;
-
-      // Form model — matches CreateGameDto
-      vm.game = {
-        name:        '',
-        genreId:     null,
-        price:       null,
-        releaseDate: ''
-      };
-
-      // Load genres for dropdown
+    function loadGenres() {
       ApiService.getGenres()
-        .then(function (data) {
-          vm.genres = data;
-        })
-        .catch(function (err) {
-          vm.errorMsg = err;
-        });
-
-      vm.submit = function (form) {
-          if (form.$invalid) {
-              form.$setSubmitted();
-              return;
-          }
-
-          vm.isSaving = true;
-          vm.errorMsg = null;
-
-          // ── FIX: ensure date is sent as plain YYYY-MM-DD string ──
-          var rawDate = vm.game.releaseDate;
-          var formattedDate = rawDate instanceof Date
-              ? rawDate.toISOString().substring(0, 10)
-              : String(rawDate).substring(0, 10);
-
-          var payload = {
-              name:        vm.game.name,
-              genreId:     parseInt(vm.game.genreId, 10),
-              price:       parseFloat(vm.game.price),
-              releaseDate: formattedDate   // ← always "YYYY-MM-DD"
-          };
-
-          ApiService.createGame(payload)
-              .then(function () {
-                  $location.path('/games');
-              })
-              .catch(function (err) {
-                  vm.errorMsg = err;
-              })
-              .finally(function () {
-                  vm.isSaving = false;
-              });
-      };
-
-      vm.cancel = function () {
-        $location.path('/games');
-      };
+        .then(function (data) { vm.genres = data; })
+        .catch(function (err) { vm.genresError = err; });
     }
-  ]);
 
+    // ── CREATE ────────────────────────────────────────────────────────────────
+    vm.openCreateModal = function () {
+      vm.newGame        = { name: '', genreId: null, price: null, releaseDate: '' };
+      vm.createErrorMsg = null;
+      showModal('createGameModal');
+    };
 
-// ─── Game Edit ────────────────────────────────────────────────────────────────
-
-angular
-  .module('gameStoreApp')
-  .controller('GameEditController', ['ApiService', '$routeParams', '$location',
-    function (ApiService, $routeParams, $location) {
-      var vm = this;
-
-      vm.genres    = [];
-      vm.game      = null;
-      vm.errorMsg  = null;
-      vm.isLoading = true;
-      vm.isSaving  = false;
-
-      // Load genres and game details in parallel
-      var genresLoaded = false;
-      var gameLoaded   = false;
-
-      function checkAllLoaded() {
-        if (genresLoaded && gameLoaded) {
-          vm.isLoading = false;
-        }
+    vm.submitCreate = function (form) {
+      if (form.$invalid) {
+        form.$setSubmitted();
+        return;
       }
+      vm.isSaving       = true;
+      vm.createErrorMsg = null;
 
-      ApiService.getGenres()
-        .then(function (data) {
-          vm.genres = data;
+      ApiService.createGame({
+        name:        vm.newGame.name,
+        genreId:     parseInt(vm.newGame.genreId, 10),
+        price:       parseFloat(vm.newGame.price),
+        releaseDate: formatDate(vm.newGame.releaseDate)
+      })
+        .then(function () {
+          hideModal('createGameModal');
+          vm.successMsg = '"' + vm.newGame.name + '" created successfully!';
+          loadGames();
+          autoDismissSuccess();
         })
-        .catch(function (err) {
-          vm.errorMsg = err;
-        })
-        .finally(function () {
-          genresLoaded = true;
-          checkAllLoaded();
-        });
+        .catch(function (err) { vm.createErrorMsg = err; })
+        .finally(function ()  { vm.isSaving = false; });
+    };
 
-      ApiService.getGame($routeParams.id)
+    // ── DETAILS ───────────────────────────────────────────────────────────────
+    vm.openDetailsModal = function (game) {
+      vm.selectedGame    = null;
+      vm.detailsErrorMsg = null;
+      showModal('detailsGameModal');
+      ApiService.getGame(game.id)
+        .then(function (data) { vm.selectedGame = data; })
+        .catch(function (err) { vm.detailsErrorMsg = err; });
+    };
+
+    // ── EDIT ──────────────────────────────────────────────────────────────────
+    vm.openEditModal = function (game) {
+      vm.editErrorMsg = null;
+      vm.editGame     = { id: game.id, name: '', genreId: null, price: null, releaseDate: '' };
+      showModal('editGameModal');
+      ApiService.getGame(game.id)
         .then(function (data) {
-          // GameDetailsDto has genreId (not genre name)
-          vm.game = {
+          vm.editGame = {
+            id:          data.id,
             name:        data.name,
             genreId:     data.genreId,
             price:       data.price,
-            releaseDate: data.releaseDate   // "YYYY-MM-DD" string
+            releaseDate: formatDate(data.releaseDate)
           };
         })
-        .catch(function (err) {
-          vm.errorMsg = err;
-        })
-        .finally(function () {
-          gameLoaded = true;
-          checkAllLoaded();
-        });
+        .catch(function (err) { vm.editErrorMsg = err; });
+    };
 
-      vm.submit = function (form) {
+    vm.submitEdit = function (form) {
       if (form.$invalid) {
-          form.$setSubmitted();
-          return;
+        form.$setSubmitted();
+        return;
       }
+      vm.isSaving     = true;
+      vm.editErrorMsg = null;
 
-      vm.isSaving = true;
-      vm.errorMsg = null;
+      ApiService.updateGame(vm.editGame.id, {
+        name:        vm.editGame.name,
+        genreId:     parseInt(vm.editGame.genreId, 10),
+        price:       parseFloat(vm.editGame.price),
+        releaseDate: formatDate(vm.editGame.releaseDate)
+      })
+        .then(function () {
+          hideModal('editGameModal');
+          vm.successMsg = '"' + vm.editGame.name + '" updated successfully!';
+          loadGames();
+          autoDismissSuccess();
+        })
+        .catch(function (err) { vm.editErrorMsg = err; })
+        .finally(function ()  { vm.isSaving = false; });
+    };
 
-      // ── FIX: ensure date is sent as plain YYYY-MM-DD string ──
-      var rawDate = vm.game.releaseDate;
-      var formattedDate = rawDate instanceof Date
-          ? rawDate.toISOString().substring(0, 10)
-          : String(rawDate).substring(0, 10);
+    vm.editFromDetails = function () {
+      hideModal('detailsGameModal');
+      $timeout(function () { vm.openEditModal(vm.selectedGame); }, 400);
+    };
 
-      var payload = {
-          name:        vm.game.name,
-          genreId:     parseInt(vm.game.genreId, 10),
-          price:       parseFloat(vm.game.price),
-          releaseDate: formattedDate   // ← always "YYYY-MM-DD"
-      };
+    // ── DELETE ────────────────────────────────────────────────────────────────
+    vm.deleteGame = function (game) {
+      if (!window.confirm('Delete "' + game.name + '"? This cannot be undone.')) { return; }
+      vm.deletingId = game.id;
+      ApiService.deleteGame(game.id)
+        .then(function () {
+          vm.successMsg = '"' + game.name + '" deleted.';
+          vm.games = vm.games.filter(function (g) { return g.id !== game.id; });
+          autoDismissSuccess();
+        })
+        .catch(function (err) { vm.errorMsg = err; })
+        .finally(function ()  { vm.deletingId = null; });
+    };
 
-      ApiService.updateGame($routeParams.id, payload)
-          .then(function () {
-              $location.path('/games');
-          })
-          .catch(function (err) {
-              vm.errorMsg = err;
-          })
-          .finally(function () {
-              vm.isSaving = false;
-          });
-  };
+    // ── GENRES ────────────────────────────────────────────────────────────────
+    vm.openGenresModal = function () {
+      vm.genresError = null;
+      showModal('genresModal');
+      ApiService.getGenres()
+        .then(function (data) { vm.genres = data; })
+        .catch(function (err) { vm.genresError = err; });
+    };
 
-      vm.cancel = function () {
-        $location.path('/games');
-      };
-    }
-  ]);
+    // ── Init ──────────────────────────────────────────────────────────────────
+    loadGames();
+    loadGenres();
+  }]);
